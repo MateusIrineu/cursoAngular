@@ -1,0 +1,11 @@
+
+<po-container>
+<p>Adicionar Tarefa</p>
+    <po-input name="input" p-label="Título da Tarefa"></po-input>
+    <po-button p-label="Adicionar Tarefa" (p-click)="onClick()"> </po-button>
+</po-container>
+
+<po-container>
+<p>Lista de Tarefas</p>
+    <po-dropdown p-label="Escolha o tipo da tarefas adicionadas" [p-actions]="[{ label: 'Melhoria de WebPage'}, { label: 'Suporte ao cliente'}, { label: 'Correção de Bug' } ]"></po-dropdown>
+</po-container>

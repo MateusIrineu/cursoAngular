@@ -1,11 +1,43 @@
+<div class="po-font-text-bold po-text-color-neutral-dark-40">Choose one or more promotional airfares</div>
 
-<po-container>
-<p>Adicionar Tarefa</p>
-    <po-input name="input" p-label="Título da Tarefa"></po-input>
-    <po-button p-label="Adicionar Tarefa" (p-click)="onClick()"> </po-button>
-</po-container>
+<po-divider></po-divider>
 
-<po-container>
-<p>Lista de Tarefas</p>
-    <po-dropdown p-label="Escolha o tipo da tarefas adicionadas" [p-actions]="[{ label: 'Melhoria de WebPage'}, { label: 'Suporte ao cliente'}, { label: 'Correção de Bug' } ]"></po-dropdown>
-</po-container>
+<po-table
+  [p-container]="'true'"
+  [p-height]="400"
+  [p-hide-batch-actions]="false"
+  [p-hide-table-search]="false"
+  [p-selectable]="true"
+  [p-sort]="true"
+  [p-striped]="true"
+  [p-actions]="actions"
+  [p-columns]="columns"
+  [p-items]="items"
+  [p-max-columns]="7"
+  [p-virtual-scroll]="false"
+  (p-collapsed)="onCollapseDetail()"
+  (p-expanded)="onExpandDetail()"
+  (p-selected)="sumTotal($event)"
+  (p-unselected)="decreaseTotal($event)"
+  (p-change-visible-columns)="changeColumnVisible($event)"
+  (p-restore-column-manager)="restoreColumn()"
+  (p-delete-items)="deleteItems($event)"
+>
+</po-table>
+
+<po-divider></po-divider>
+
+<!-- <div class="po-row">
+  <po-button class="po-md-3" p-icon="an an-shopping-cart-simple" p-label="Add items to cart" (p-click)="addToCart()">
+  </po-button>
+  <po-button class="po-md-3" p-label="Expand all detail" (p-click)="expandAll()"> </po-button>
+  <po-button class="po-md-3" p-label="Collapse all detail" (p-click)="collapseAll()"> </po-button>
+</div> -->
+
+<!-- <po-modal p-click-out="true" p-size="sm" p-title="{ { detail?.destination }} - { { detail?.country }}">
+  <po-info class="po-sm-6" p-label="Airline" [p-value]="detail?.airline"> </po-info>
+
+  <po-info class="po-sm-2" p-label="Initials" [p-value]="detail?.initials"> </po-info>
+
+  <po-info class="po-sm-4" p-label="Class" [p-value]="detail?.class"> </po-info>
+</po-modal> -->

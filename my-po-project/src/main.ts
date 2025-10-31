@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AdicionarTarefa } from './app/tarefa.component';
+import { SamplePoTableTransport } from './app/app.component'
 
-bootstrapApplication(AdicionarTarefa, appConfig)
+bootstrapApplication(SamplePoTableTransport, appConfig)
   .catch((err) => console.error(err));

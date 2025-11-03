@@ -12,3 +12,7 @@ p {
     margin-left: 10px;
     padding: 0
 }
+
+po-button {
+    margin: 0 0 20px 10px;
+}

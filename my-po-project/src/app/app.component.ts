@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, viewChild, ViewChild } from '@angular/core';
-import { SamplePoTableAirfareService } from './sample-po-table-airfare.service';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { SamplePoTableAirfareService } from './sample-po-table-airfare.service'
+import { FormsModule } from '@angular/forms';
 
 
 
@@ -23,8 +24,9 @@ import {
   PoDividerModule,
   PoInfoModule,
   PoModalAction,
+  PoModule,
+  PoSelectOption,
 } from '@po-ui/ng-components';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -42,44 +44,54 @@ import { FormsModule } from '@angular/forms';
     PoTableModule,
     PoModalModule,
     PoInfoModule,
+    PoModule
 
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [SamplePoTableAirfareService, PoDialogService],
+  providers: [SamplePoTableAirfareService, PoDialogService, PoNotificationService],
+  standalone: true
 })
 export class SamplePoTableTransport implements OnInit {
   @ViewChild(PoModalComponent, { static: true }) poModal!: PoModalComponent;
   @ViewChild(PoTableComponent, { static: true }) poTable!: PoTableComponent;
 
+  
+  // ------------------------------------------------ LISTA DE PROPRIEDADES
+  
+  columns!: Array<PoTableColumn>;
+  items!: Array<any>;
+  itemToEdit: any = {};
+  isCreating: boolean = false;
+  
   actions: Array<PoTableAction> = [
     //----------------------------------------------- ÁREA DOS DETALHES OBS: SÓ MANTIVE DE EDITAR (...)
     { action: this.editItem.bind(this), icon: 'po-icon po-icon-edit', label: 'Editar' },
+    { action: this.confirmRemove.bind(this), icon: 'po-icon po-icon-delete', label: 'Remover' },
+    
   ];
 
-  // ------------------------------------------------ LISTA DE PROPRIEDADES
-
-  columns!: Array<PoTableColumn>;
-  columnsDefault!: Array<PoTableColumn>;
-  detail: any;
-  items!: Array<any>;
-  total: number = 0;
-  totalExpanded = 0;
-  initialColumns!: Array<any>;
-  itemToEdit: any;
-  isCreating: boolean = false;
-
+  categoryOptions: Array<PoSelectOption> = [
+    { label: 'Suporte', value: 'SUPORTE' },
+    { label: 'Melhoria', value: 'MELHORIA' },
+    { label: 'Correção', value: 'CORREÇÃO' },
+    { label: 'Análise', value: 'ANÁLISE' },
+  ]
   
   updateAction: PoModalAction = {
       label: 'Atualizar',
       action: () => this.updateTask()
     };
     
-    cancelAction: PoModalAction = {
+  cancelAction: PoModalAction = {
       label: 'Cancelar',
       action: () => this.poModal.close()
     };
     
+  createAction: PoModalAction = {
+      label: 'Confirmar Criação',
+      action: () => this.createTask() 
+  };
     constructor(
       private sampleAirfare: SamplePoTableAirfareService,
       private poNotification: PoNotificationService,
@@ -87,14 +99,11 @@ export class SamplePoTableTransport implements OnInit {
     ) {}
     
     
-    ngOnInit(): void { 
+    ngOnInit(): void {
+      this.columns = this.sampleAirfare.getColumns();
       this.items = this.sampleAirfare.getItems();
     }
     
-    createAction: PoModalAction = {
-    label: 'Confirmar Criação',
-    action: () => this.createTask() 
-  };
 
   // ---------------------------- MODAIS QUE SERÃO ABERTOS APOS CLICK
   openCreateModal() {
@@ -105,47 +114,54 @@ export class SamplePoTableTransport implements OnInit {
 
 // ------------------------------ MÉTODO PARA REMOVER 
 
-  removeTask(item: { [key: string]: any }) {
-    this.poTable.removeItem(item);
-  }
-
+executeRemove(item: any) {
+this.sampleAirfare.removeItem(item);
+this.items = [...this.sampleAirfare.getItems()];
+this.poNotification.success(`Tarefa "${item.titulo || item.id}" foi removida com sucesso!`)
+}
   confirmRemove(item: any) {
   this.poDialog.confirm({
     title: 'Confirmação de Exclusão',
-    message: `Tem certeza que deseja remover a tarefa: ${item.titulo}?`,
+    message: `Tem certeza que deseja remover a tarefa: ${item.titulo || item.id}?`,
     confirm: () => this.executeRemove(item),
     cancel: () => this.poNotification.information('Operação cancelada.')
   });
 }
 
-  executeRemove(item: any) {
-  this.removeTask(item); 
-  alert('Tarega removida com sucesso!');
-}
 
 // -------------------------------- MÉTODO PARA CRIAR TAREFA
   createTask() {
-  const newItem = {...this.itemToEdit};
+  const newItem = {...this.itemToEdit}; // ver sobre esse spread -> clone
   
   if (!newItem.id) {
      this.poNotification.error('O ID da tarefa é obrigatório.');
      return;
   }
 
-  const isDuplicate = this.items.some(item => item.id === newItem.id);
+  const isDuplicate = this.items.some(item => String(item.id) === String(newItem.id));
   if (isDuplicate) {
      this.poNotification.error('O ID  já existe. Por favor, escolha outro.');
      return;
   }
   this.sampleAirfare.addItem(newItem);
-  this.items = [...this.items]; 
+  this.items = [...this.sampleAirfare.getItems()]; 
   
-  this.poNotification.success(`Tarefa "${newItem.titulo}" criada com sucesso!`);
+  this.poNotification.success(`Tarefa "${newItem.titulo || newItem.id}" criada com sucesso!`);
   this.poModal.close();
   this.isCreating = false;
   }
 
 // ----------------------------------- EDIÇÃO DE TAREFA
+updateTask() {
+  const itemToUpdate = this.itemToEdit; 
+  
+  this.sampleAirfare.updateItem(itemToUpdate); 
+  
+  this.items = [...this.sampleAirfare.getItems()]; 
+  
+  this.poNotification.success(`Tarefa "${itemToUpdate.titulo || itemToUpdate.id}" atualizada com sucesso!`);
+  this.poModal.close();
+}
 
   editItem(item: any) {
   this.isCreating = false; 
@@ -153,17 +169,9 @@ export class SamplePoTableTransport implements OnInit {
   this.poModal.open();
 }
 
-updateTask() {
-  const itemToUpdate = this.itemToEdit; 
-  
-  this.sampleAirfare.updateItem(itemToUpdate); 
-  
-  this.items = [...this.items]; 
-  
-  this.poNotification.success(`Tarefa "${itemToUpdate.titulo || itemToUpdate.id}" atualizada com sucesso!`);
-  this.poModal.close();
-}
 
   };
 
-
+// -> RESOLVIDO: ERROR TypeError: Cannot read properties of undefined (reading 'id') pode estar dando erro nisso
+// dropdown da Categoria componente Select ou Combo
+// deixar o ID sem visualizar (oculto) disabled

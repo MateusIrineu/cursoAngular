@@ -1,8 +1,14 @@
-<div class="po-font-text-bold po-text-color-neutral-dark-40">Choose one or more promotional airfares</div>
-
+<div class="header-container">
+    <div class="po-font-text-bold po-text-color-neutral-dark-40">GERENCIADOR DE TAREFAS</div>
+</div>
 <po-divider></po-divider>
+   
 
 <po-table
+  #poTable
+  (p-remove)="confirmRemove($event)"
+  [p-items]="items"
+  [p-columns]="columns"
   [p-container]="'true'"
   [p-height]="400"
   [p-hide-batch-actions]="false"
@@ -11,33 +17,58 @@
   [p-sort]="true"
   [p-striped]="true"
   [p-actions]="actions"
-  [p-columns]="columns"
-  [p-items]="items"
   [p-max-columns]="7"
   [p-virtual-scroll]="false"
-  (p-collapsed)="onCollapseDetail()"
-  (p-expanded)="onExpandDetail()"
-  (p-selected)="sumTotal($event)"
-  (p-unselected)="decreaseTotal($event)"
-  (p-change-visible-columns)="changeColumnVisible($event)"
-  (p-restore-column-manager)="restoreColumn()"
-  (p-delete-items)="deleteItems($event)"
 >
 </po-table>
 
+<div class="po-row po-mb-2">
+  <po-button 
+      p-label="Criar Nova Tarefa" 
+      (p-click)="openCreateModal()"
+      p-kind="primary" 
+      p-icon="po-icon-plus"
+  ></po-button>
+</div>
+
+<po-modal
+  #poModal
+  [p-title]="isCreating ? 'Nova Tarefa' : 'Editar Tarefa'"
+  
+  [p-primary-action]="isCreating ? createAction : updateAction"
+  [p-secondary-action]="cancelAction"
+>
+  <form class="po-row">
+    <po-input
+      class="po-md-3"
+      name="id"
+      p-label="ID da Tarefa"
+      [(ngModel)]="itemToEdit.id"> 
+    </po-input>
+
+    <po-input
+      class="po-md-4"
+      name="titulo"
+      p-label="Título"
+      [(ngModel)]="itemToEdit.titulo">
+    </po-input>
+
+    <po-input
+      class="po-md-3"
+      name="categoria"
+      p-label="Categoria"
+      [(ngModel)]="itemToEdit.categoria">
+    </po-input>
+
+    <po-input
+      class="po-md-2"
+      name="date"
+      p-label="Data"
+      [(ngModel)]="itemToEdit.date">
+    </po-input>
+  </form>
+</po-modal>
+
+
 <po-divider></po-divider>
 
-<!-- <div class="po-row">
-  <po-button class="po-md-3" p-icon="an an-shopping-cart-simple" p-label="Add items to cart" (p-click)="addToCart()">
-  </po-button>
-  <po-button class="po-md-3" p-label="Expand all detail" (p-click)="expandAll()"> </po-button>
-  <po-button class="po-md-3" p-label="Collapse all detail" (p-click)="collapseAll()"> </po-button>
-</div> -->
-
-<!-- <po-modal p-click-out="true" p-size="sm" p-title="{ { detail?.destination }} - { { detail?.country }}">
-  <po-info class="po-sm-6" p-label="Airline" [p-value]="detail?.airline"> </po-info>
-
-  <po-info class="po-sm-2" p-label="Initials" [p-value]="detail?.initials"> </po-info>
-
-  <po-info class="po-sm-4" p-label="Class" [p-value]="detail?.class"> </po-info>
-</po-modal> -->

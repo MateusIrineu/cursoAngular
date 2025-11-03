@@ -1,24 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, viewChild, ViewChild } from '@angular/core';
 import { SamplePoTableAirfareService } from './sample-po-table-airfare.service';
 
 
 
 import {
-  PoMenuItem,
   PoMenuModule,
   PoPageModule,
   PoToolbarModule,
   PoButtonModule,
   PoContainerModule,
   PoFieldModule,
-  PoRadioGroupOption,
   PoDropdownModule,
   PoTableModule,
   PoTableColumn,
-  PoSelectOption,
-  PoTableRowTemplateArrowDirection,
-  PoWidgetComponent,
   PoDialogService,
   PoModalComponent,
   PoModalModule,
@@ -27,13 +22,15 @@ import {
   PoTableAction,
   PoDividerModule,
   PoInfoModule,
-  PoInfoOrientation
+  PoModalAction,
 } from '@po-ui/ng-components';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
   imports: [
     CommonModule,
+    FormsModule,
     PoToolbarModule,
     PoMenuModule,
     PoPageModule,
@@ -44,26 +41,24 @@ import {
     PoDropdownModule,
     PoTableModule,
     PoModalModule,
-    PoInfoModule
+    PoInfoModule,
+
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   providers: [SamplePoTableAirfareService, PoDialogService],
 })
-export class SamplePoTableTransport implements AfterViewInit, OnInit {
+export class SamplePoTableTransport implements OnInit {
   @ViewChild(PoModalComponent, { static: true }) poModal!: PoModalComponent;
   @ViewChild(PoTableComponent, { static: true }) poTable!: PoTableComponent;
 
   actions: Array<PoTableAction> = [
-    {
-      action: this.discount.bind(this),
-      icon: 'an an-currency-circle-dollar',
-      label: 'Apply Discount',
-      disabled: this.validateDiscount.bind(this)
-    },
-    { action: this.details.bind(this), icon: 'an an-info', label: 'Details' },
-    { action: this.remove.bind(this), icon: 'po-icon an an-trash', label: 'Remove' }
+    //----------------------------------------------- ÁREA DOS DETALHES OBS: SÓ MANTIVE DE EDITAR (...)
+    { action: this.editItem.bind(this), icon: 'po-icon po-icon-edit', label: 'Editar' },
   ];
+
+  // ------------------------------------------------ LISTA DE PROPRIEDADES
+
   columns!: Array<PoTableColumn>;
   columnsDefault!: Array<PoTableColumn>;
   detail: any;
@@ -71,164 +66,104 @@ export class SamplePoTableTransport implements AfterViewInit, OnInit {
   total: number = 0;
   totalExpanded = 0;
   initialColumns!: Array<any>;
+  itemToEdit: any;
+  isCreating: boolean = false;
 
-  constructor(
-    private sampleAirfare: SamplePoTableAirfareService,
-    private poNotification: PoNotificationService,
-    private poDialog: PoDialogService
-  ) {}
-
-  ngOnInit(): void {
-    this.columns = this.sampleAirfare.getColumns();
-    this.items = this.sampleAirfare.getItems();
-  }
-
-  ngAfterViewInit(): void {
-    this.columnsDefault = this.columns;
-    const storedColumns = localStorage.getItem('initial-columns');
-    if (storedColumns) {
-      this.initialColumns = storedColumns.split(',');
-
-      const result = this.columns.map(el => ({
-        ...el,
-        visible: this.initialColumns.includes(el.property)
-      }));
-
-      const newColumn = [...result];
-      newColumn.sort(this.sortFunction);
-      this.columns = newColumn;
+  
+  updateAction: PoModalAction = {
+      label: 'Atualizar',
+      action: () => this.updateTask()
+    };
+    
+    cancelAction: PoModalAction = {
+      label: 'Cancelar',
+      action: () => this.poModal.close()
+    };
+    
+    constructor(
+      private sampleAirfare: SamplePoTableAirfareService,
+      private poNotification: PoNotificationService,
+      private poDialog: PoDialogService
+    ) {}
+    
+    
+    ngOnInit(): void { 
+      this.items = this.sampleAirfare.getItems();
     }
-  }
+    
+    createAction: PoModalAction = {
+    label: 'Confirmar Criação',
+    action: () => this.createTask() 
+  };
 
-  sortFunction(a: any, b: any): number {
-    const initialColumns = localStorage.getItem('initial-columns');
-    const teste = initialColumns ? initialColumns.split(',') : [];
-    const indexA = teste.indexOf(a['property']);
-    const indexB = teste.indexOf(b['property']);
-    if (indexA === -1) {
-      return 1;
-    }
-    if (indexB === -1) {
-      return -1;
-    }
-    if (indexA < indexB) {
-      return -1;
-    } else if (indexA > indexB) {
-      return 1;
-    }
-    return 0;
-  }
+  // ---------------------------- MODAIS QUE SERÃO ABERTOS APOS CLICK
+  openCreateModal() {
+  this.isCreating = true;
+  this.itemToEdit = {};
+  this.poModal.open();
+}
 
-  addToCart() {
-    const selectedItems = this.poTable.getSelectedRows();
+// ------------------------------ MÉTODO PARA REMOVER 
 
-    if (selectedItems.length > 0) {
-      this.poDialog.confirm({
-        title: 'Add to cart',
-        message: `Would you like to add ${selectedItems.length} items to cart?`,
-        confirm: () => this.confirmItems(selectedItems),
-        cancel: () => {}
-      });
-    }
-  }
-
-  confirmItems(selectedItems: Array<any>) {
-    selectedItems.forEach(item => {
-      switch (item.status) {
-        case 'available':
-          this.poNotification.success(`${this.getDescription(item)} added succesfully`);
-          break;
-        case 'reserved':
-          this.poNotification.warning(
-            `${this.getDescription(item)} added succesfully, verify your e-mail to complete reservation`
-          );
-          break;
-        case 'closed':
-          this.poNotification.error(`${this.getDescription(item)} is closed and not available anymore`);
-          break;
-      }
-    });
-
-    this.poTable.unselectRows();
-  }
-
-  collapseAll() {
-    this.items.forEach((item, index) => {
-      if (item.detail) {
-        this.onCollapseDetail();
-        this.poTable.collapse(index);
-      }
-    });
-  }
-
-  decreaseTotal(row: any) {
-    if (row.value) {
-      this.total -= row.value;
-    }
-  }
-
-  deleteItems(items: Array<any>) {
-    this.items = items;
-  }
-
-  details(item: any) {
-    this.detail = item;
-    this.poModal.open();
-  }
-
-  remove(item: { [key: string]: any }) {
+  removeTask(item: { [key: string]: any }) {
     this.poTable.removeItem(item);
   }
 
-  discount(item: any) {
-    if (!item.disableDiscount) {
-      const updatedItem = { ...item, value: item.value - item.value * 0.2, disableDiscount: true };
-      this.poTable.updateItem(item, updatedItem);
-    }
+  confirmRemove(item: any) {
+  this.poDialog.confirm({
+    title: 'Confirmação de Exclusão',
+    message: `Tem certeza que deseja remover a tarefa: ${item.titulo}?`,
+    confirm: () => this.executeRemove(item),
+    cancel: () => this.poNotification.information('Operação cancelada.')
+  });
+}
+
+  executeRemove(item: any) {
+  this.removeTask(item); 
+  alert('Tarega removida com sucesso!');
+}
+
+// -------------------------------- MÉTODO PARA CRIAR TAREFA
+  createTask() {
+  const newItem = {...this.itemToEdit};
+  
+  if (!newItem.id) {
+     this.poNotification.error('O ID da tarefa é obrigatório.');
+     return;
   }
 
-  expandAll() {
-    this.totalExpanded = 0;
-    this.items.forEach((item, index) => {
-      if (item.detail) {
-        this.onExpandDetail();
-        this.poTable.expand(index);
-      }
-    });
+  const isDuplicate = this.items.some(item => item.id === newItem.id);
+  if (isDuplicate) {
+     this.poNotification.error('O ID  já existe. Por favor, escolha outro.');
+     return;
+  }
+  this.sampleAirfare.addItem(newItem);
+  this.items = [...this.items]; 
+  
+  this.poNotification.success(`Tarefa "${newItem.titulo}" criada com sucesso!`);
+  this.poModal.close();
+  this.isCreating = false;
   }
 
-  onCollapseDetail() {
-    this.totalExpanded -= 1;
-    this.totalExpanded = this.totalExpanded < 0 ? 0 : this.totalExpanded;
-  }
+// ----------------------------------- EDIÇÃO DE TAREFA
 
-  onExpandDetail() {
-    this.totalExpanded += 1;
-  }
+  editItem(item: any) {
+  this.isCreating = false; 
+  this.itemToEdit = { ...item }; 
+  this.poModal.open();
+}
 
-  sumTotal(row: any) {
-    if (row.value) {
-      this.total += row.value;
-    }
-  }
+updateTask() {
+  const itemToUpdate = this.itemToEdit; 
+  
+  this.sampleAirfare.updateItem(itemToUpdate); 
+  
+  this.items = [...this.items]; 
+  
+  this.poNotification.success(`Tarefa "${itemToUpdate.titulo || itemToUpdate.id}" atualizada com sucesso!`);
+  this.poModal.close();
+}
 
-  restoreColumn() {
-    this.columns = this.columnsDefault;
-  }
-
-  changeColumnVisible(event: any) {
-    localStorage.setItem('initial-columns', event);
-  }
-
-  private getDescription(item: any) {
-    return `Airfare to ${item.destination} - ${item.initials}`;
-  }
-
-  private validateDiscount(item: any) {
-    return item.disableDiscount;
-  }
- 
-  // public readonly Orientacao = PoInfoOrientation;
-  }
+  };
 
 

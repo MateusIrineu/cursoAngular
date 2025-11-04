@@ -27,10 +27,10 @@ export class SamplePoTableAirfareService {
   ];
 
   private columnsList: any[] = [
-    { property: 'id', label: 'ID', width: '10%' },
+    // { property: 'id', label: 'ID', width: '10%' },
     { property: 'titulo', label: 'Título', width: '40%' },
     { property: 'categoria', label: 'Categoria', width: '25%' },
-    { property: 'date', label: 'Prazo', width: '25%' },
+    { property: 'date', label: 'Data', width: '25%' },
   ];
 
   getItems(): any[] {

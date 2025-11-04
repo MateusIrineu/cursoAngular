@@ -25,13 +25,6 @@
   [p-primary-action]="isCreating ? createAction : updateAction"
   [p-secondary-action]="cancelAction">
 
-  <po-input
-    name="id"
-    p-label="ID da Tarefa"
-    [(ngModel)]="itemToEdit.id"
-    [p-disabled]="'!isCreating'"
-    p-required>
-  </po-input>
   
   <po-input
     name="titulo"
@@ -40,27 +33,20 @@
     p-required>
   </po-input>
   
-  <po-combo 
-    name="categoria" 
-    p-label="Escolha a Categoria" 
-    [p-options]="categoryOptions"
-    [(ngModel)]="itemToEdit.categoria"
-    p-required
-    > 
-  </po-combo>
-
-  <!-- <po-input
-    name="categoria"
-    p-label="Categoria"
-    [(ngModel)]="itemToEdit.categoria"
-    p-required>
-  </po-input> -->
+    <po-combo 
+      name="categoria"
+      p-label="Escolha a Categoria" 
+      [p-options]="categoryOptions"
+      [ngModel]="itemToEdit.categoria"
+      (ngModelChange)="itemToEdit.categoria = $event"
+      > 
+    </po-combo>
+  <!-- [(ngModel)]="itemToEdit.categoria" -->
   
   <po-input
     name="date"
-    p-label="Prazo (DD-MM-AAAA)"
+    p-label="Data (DD-MM-AAAA)"
     [(ngModel)]="itemToEdit.date"
-    p-mask="99-99-9999"
     p-required>
   </po-input>
 
